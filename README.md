@@ -1,38 +1,43 @@
-# Sentinel: Self-Verifying Kubernetes CI/CD & Observability Platform
+# Sentinel · Self-Verifying Kubernetes CI/CD & Observability Platform
 
-**Sentinel** is a production-grade, three-tier web application platform deployed on Kubernetes (K3s). It features a fully automated Jenkins CI/CD pipeline that verifies its own deployments, backed by a comprehensive Prometheus/Alertmanager observability stack that pages Slack in real-time when cluster health degrades.
+[![CI](https://img.shields.io/badge/CI-Jenkins-blue)](https://jenkins.io)
+[![K8s](https://img.shields.io/badge/K8s-K3s-326ce5)](https://k3s.io)
+[![Monitoring](https://img.shields.io/badge/Monitoring-Prometheus%20%7C%20Alertmanager-orange)](https://prometheus.io)
+[![Alerts](https://img.shields.io/badge/Alerts-Slack-green)](https://slack.com)
 
-![Architecture](https://img.shields.io/badge/Architecture-3--Tier-blue)
-![Platform](https://img.shields.io/badge/Platform-K3s%20on%20AWS-FF9900)
-![CI/CD](https://img.shields.io/badge/CI%2FCD-Jenkins-D24939)
-![Monitoring](https://img.shields.io/badge/Monitoring-Prometheus%20%7C%20Alertmanager-E6522C)
+**Sentinel** is a production-grade DevOps platform: a three-tier application
+(Nginx → Java/JDBC → MySQL) on Kubernetes (K3s, AWS EC2), delivered by a Jenkins
+pipeline that *verifies its own deployments*, and watched by a Prometheus stack
+that pages Slack the moment anything degrades.
+
+> Named *Sentinel* because the platform stands guard over itself:
+> no build can claim success unless pods are proven healthy, and no failure
+> happens silently.
 
 ---
 
-## 🏗 Architecture Diagram
+## 🏗 Architecture
 
 ```text
-                     +-------------------+
-                     |     Jenkins       |
-                     | (CI/CD & Ops)     |
-                     +---------+---------+
-                               | build, push, deploy, verify
-                               v
-        +---------------------------------------------------------+
-        |                    K3s Cluster (AWS EC2)                |
-        |                                                         |
-        |  +----------+    +-----------+    +------------------+  |
-        |  | Frontend |===>|  Backend  |===>|  MySQL Database  |  |
-        |  |  (Nginx) |    |  (Java)   |    | (Stateful Pod)   |  |
-        |  +----------+    +-----------+    +------------------+  |
-        |        ^                                                  |
-        |        | Scrape Metrics                                   |
-        |  +-----+------+  +--------------+  +------------------+   |
-        |  | Prometheus |=>| Alertmanager |=>| Slack (#alerts)  |   |
-        |  +-----+------+  +--------------+  +------------------+   |
-        +---------------------------------------------------------+
-
-<img width="721" height="615" alt="slack alert" src="https://github.com/user-attachments/assets/81da118c-8de2-42ce-8ad8-df6e3e142cd9" />
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f06dc80e-1dae-47ab-bc5e-dcfb6c127eb5" />
-
+        git push                +------------------+
+   ────────────────▶            |     Jenkins      |
+                                | build·test·push  |
+                                | validate·deploy  |
+                                | verify rollout   |
+                                +--------+---------+
+                                         | kubectl apply -f k8s/
+                                         ▼
+   +-------------------------------------------------------------+
+   |                     K3s cluster (EC2)                       |
+   |                                                             |
+   |  +----------+   +----------+   +-----------+                |
+   |  | frontend |──▶| backend  |──▶|   mysql   |  3-tier app    |
+   |  |  nginx   |   | java/jdbc|   |  (PVC)    |                |
+   |  +----------+   +----------+   +-----------+                |
+   |        ▲                                                    |
+   |        │ scrape                                             |
+   |  +------------+   +--------------+   +-------------+        |
+   |  | Prometheus |──▶| Alertmanager |──▶| Slack alerts|        |
+   |  +------------+   +--------------+   +-------------+        |
+   |   node-exporter · kube-state-metrics                        |
+   +-------------------------------------------------------------+
