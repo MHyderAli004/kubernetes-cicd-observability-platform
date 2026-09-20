@@ -1,123 +1,89 @@
 pipeline {
     agent any
 
-    environment {
-        // --- Jenkins Credential IDs (Manage Jenkins -> Credentials) ---
-        DOCKER_CREDS_ID    = 'docker-hub-credentials'       // Kind: Username with password (Docker Hub)
-        KUBECONFIG_CRED_ID = 'kubeconfig-file-credentials'  // Kind: Secret file (your kubeconfig)
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '5'))   // history stays clean forever
+    }
 
-        // --- Docker Hub image names ---
-        DOCKER_HUB_USER = 'mhyderali004'
-        BACKEND_IMAGE   = "${DOCKER_HUB_USER}/cicd-backend"
-        FRONTEND_IMAGE  = "${DOCKER_HUB_USER}/cicd-frontend"
+    environment {
+        // ⚠️ match these two IDs to YOUR Jenkins credentials (Manage Jenkins → Credentials)
+        DOCKER_CREDS = 'docker-hub-credentials'
+        KUBE_CREDS   = 'kubeconfig-file-credentials'
+        REGISTRY     = 'mhyderali004'
+        BACKEND_IMG  = "${REGISTRY}/cicd-backend"
+        FRONTEND_IMG = "${REGISTRY}/cicd-frontend"
+        TAG          = 'latest'
     }
 
     stages {
-        stage('Checkout Code') {
+
+        stage('Checkout') {
             steps {
-                echo 'Checking out source code from GitHub...'
                 checkout scm
             }
         }
 
-        stage('Build Backend') {
+        stage('Build & Test') {
             steps {
-                dir('backend') {
-                    echo 'Compiling the backend Java application...'
-                    sh 'mvn clean compile'
+                sh 'mvn -f backend/pom.xml clean package -q'   // adjust path if your pom lives elsewhere
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDS,
+                                                  usernameVariable: 'DH_USER',
+                                                  passwordVariable: 'DH_PASS')]) {
+                    sh '''
+                        echo "$DH_PASS" | docker login -u "$DH_USER" --password-stdin
+                        docker build -t ${BACKEND_IMG}:${TAG}  ./backend
+                        docker build -t ${FRONTEND_IMG}:${TAG} ./frontend
+                        docker push ${BACKEND_IMG}:${TAG}
+                        docker push ${FRONTEND_IMG}:${TAG}
+                        docker logout
+                    '''
                 }
             }
         }
 
-        stage('Run Tests') {
+        stage('Validate Manifests') {          // NEW: catches YAML/schema errors BEFORE touching the cluster
             steps {
-                dir('backend') {
-                    echo 'Running automated backend unit tests...'
-                    sh 'mvn test'
-                }
-            }
-        }
-
-        stage('Package Application') {
-            steps {
-                dir('backend') {
-                    echo 'Packaging the backend into a deployable JAR...'
-                    sh 'mvn package -DskipTests'
-                }
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                echo 'Building Docker images for frontend and backend...'
-                sh 'docker compose build'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                echo 'Logging into Docker Hub and pushing images...'
-                withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDS_ID,
-                                                    usernameVariable: 'DOCKER_USER',
-                                                    passwordVariable: 'DOCKER_PASS')]) {
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker compose push'
+                withCredentials([file(credentialsId: env.KUBE_CREDS, variable: 'KUBECONFIG')]) {
+                    sh 'kubectl apply --dry-run=client -f k8s/'
                 }
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                echo 'Deploying updated images to the Kubernetes cluster...'
-
-                // Injects the kubeconfig secret file into the KUBECONFIG env var.
-                // kubectl reads KUBECONFIG automatically - no plugin required.
-                withCredentials([file(credentialsId: env.KUBECONFIG_CRED_ID,
-                                      variable: 'KUBECONFIG')]) {
-
-                    // Apply all manifests from the k8s/ folder
-                    sh 'kubectl apply -f k8s/'
-
-                    // Force pods to restart so they pull the newly pushed ':latest' images
-                    sh 'kubectl rollout restart deployment mysql'
-                    sh 'kubectl rollout restart deployment backend'
-                    sh 'kubectl rollout restart deployment frontend'
-
-                    // Wait until each deployment is stable (fails the build if pods crash)
-                    sh 'kubectl rollout status deployment/mysql    --timeout=120s'
-                    sh 'kubectl rollout status deployment/backend  --timeout=120s'
-                    sh 'kubectl rollout status deployment/frontend --timeout=120s'
+                withCredentials([file(credentialsId: env.KUBE_CREDS, variable: 'KUBECONFIG')]) {
+                    sh '''
+                        kubectl apply -f k8s/
+                        kubectl rollout restart deployment/backend deployment/frontend deployment/mysql
+                    '''
                 }
             }
         }
 
-        stage('Verify deployment') {
+        stage('Verify Rollout') {             // the stage that stops green builds from lying
             steps {
-                echo 'Verifying final deployment status...'
-                // Must include credentials again so kubectl can talk to the cluster
-                withCredentials([file(credentialsId: env.KUBECONFIG_CRED_ID,
-                                      variable: 'KUBECONFIG')]) {
-                    sh 'kubectl rollout status deployment/mysql    --timeout=180s'
-                    sh 'kubectl rollout status deployment/backend  --timeout=180s'
-                    sh 'kubectl rollout status deployment/frontend --timeout=180s'
-                    sh 'kubectl get pods'
-                    sh 'kubectl get svc'
+                withCredentials([file(credentialsId: env.KUBE_CREDS, variable: 'KUBECONFIG')]) {
+                    sh '''
+                        kubectl rollout status deployment/mysql    --timeout=180s
+                        kubectl rollout status deployment/backend  --timeout=180s
+                        kubectl rollout status deployment/frontend --timeout=180s
+                        kubectl get pods -n default
+                    '''
                 }
             }
         }
     }
 
     post {
-        success {
-            echo '✅ Pipeline succeeded! Application is live on Kubernetes.'
-        }
-        failure {
-            echo '❌ Pipeline failed. Check the logs above.'
-        }
-        always {
-            echo 'Cleaning up Docker artifacts on the Jenkins agent...'
-            sh 'docker logout || true'
-            sh 'docker image prune -f || true'
-        }
+        success { echo '✅ Pipeline green: images built, manifests valid, rollout verified.' }
+        failure { echo '🚨 Pipeline failed — inspect the red stage; cluster keeps last known-good state.' }
+        always  { cleanWs() }                  // fresh workspace every build = no stale-file surprises
     }
 }
