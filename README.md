@@ -31,3 +31,8 @@
         |  | Prometheus |=>| Alertmanager |=>| Slack (#alerts)  |   |
         |  +-----+------+  +--------------+  +------------------+   |
         +---------------------------------------------------------+
+
+<img width="721" height="615" alt="slack alert" src="https://github.com/user-attachments/assets/81da118c-8de2-42ce-8ad8-df6e3e142cd9" />
+
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/f06dc80e-1dae-47ab-bc5e-dcfb6c127eb5" />
+
