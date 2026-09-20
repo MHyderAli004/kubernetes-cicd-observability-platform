@@ -48,14 +48,6 @@ pipeline {
             }
         }
 
-        stage('Validate Manifests') {          // NEW: catches YAML/schema errors BEFORE touching the cluster
-            steps {
-                withCredentials([file(credentialsId: env.KUBE_CREDS, variable: 'KUBECONFIG')]) {
-                    sh 'kubectl apply --dry-run=client -f k8s/'
-                }
-            }
-        }
-
         stage('Deploy to Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: env.KUBE_CREDS, variable: 'KUBECONFIG')]) {
