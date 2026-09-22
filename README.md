@@ -14,6 +14,12 @@ that pages Slack the moment anything degrades.
 > no build can claim success unless pods are proven healthy, and no failure
 > happens silently.
 
+## 🎬 Demo: Crew Onboarding app (screen recording)
+
+<video src="Assets/crew-onboarding-app-ui.mp4" controls width="720"></video>
+
+*If the player doesn't render, [watch it here](Assets/crew-onboarding-app-ui.mp4).*
+
 ---
 
 ## 🏗 Architecture
