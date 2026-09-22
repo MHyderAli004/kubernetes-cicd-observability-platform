@@ -18,8 +18,6 @@ that pages Slack the moment anything degrades.
 
 <video src="Assets/crew-onboarding-app-ui.mp4" controls width="720"></video>
 
-*If the player doesn't render, [watch it here](Assets/crew-onboarding-app-ui.mp4).*
-
 ---
 
 ## 🏗 Architecture
