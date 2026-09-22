@@ -14,26 +14,6 @@ that pages Slack the moment anything degrades.
 > no build can claim success unless pods are proven healthy, and no failure
 > happens silently.
 
-## 📸 Proof It Works
-
-### 1. Pipeline — every stage green, including Validate & Verify
-![Jenkins green build](Assets/jenkins-build-green.png)
-
-### 2. Cluster — fresh pods, zero restarts after a clean-slate deploy
-![Fresh cluster](Assets/cluster-fresh-pods.png)
-
-### 3. Observability — Prometheus catches a planted crash-loop
-![Prometheus firing](Assets/prometheus-firing.png)
-
-### 4. Incident lifecycle in Slack — FIRING → RESOLVED
-![Slack alerts](Assets/slack-firing-resolved.png)
-
-### 5. The application — Crew Onboarding console
-<img src="Assets/crew-onboarding-form.png" alt="Onboarding form" width="700">
-
-### 6. Success state — minted crew badge
-<img src="Assets/crew-badge.png" alt="Crew badge" width="700">
-
 ---
 
 ## 🏗 Architecture
@@ -61,3 +41,26 @@ that pages Slack the moment anything degrades.
    |  +------------+   +--------------+   +-------------+        |
    |   node-exporter · kube-state-metrics                        |
    +-------------------------------------------------------------+
+
+---
+
+## 📸 Proof It Works
+
+### 1. Pipeline — every stage green, including Validate & Verify
+![Jenkins green build](Assets/jenkins-build-green.png)
+
+### 2. Cluster — fresh pods, zero restarts after a clean-slate deploy
+![Fresh cluster](Assets/cluster-fresh-pods.png)
+
+### 3. Observability — Prometheus catches a planted crash-loop
+![Prometheus firing](Assets/prometheus-firing.png)
+
+### 4. Incident lifecycle in Slack — FIRING → RESOLVED
+![Slack alerts](Assets/slack-firing-resolved.png)
+
+### 5. The application — Crew Onboarding console
+<img src="Assets/crew-onboarding-form.png" alt="Onboarding form" width="700">
+
+### 6. Success state — minted crew badge
+<img src="Assets/crew-badge.png" alt="Crew badge" width="700">
+
