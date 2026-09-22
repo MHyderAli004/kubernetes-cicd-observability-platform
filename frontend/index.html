@@ -1,167 +1,238 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Registration</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinel · Crew Onboarding</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; font-family:'Inter',sans-serif; }
+  body {
+    min-height:100vh; color:#e8ecf8; display:flex; justify-content:center; align-items:center;
+    background:
+      linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px),
+      radial-gradient(ellipse at top, #16204a 0%, #0b1020 60%, #070b16 100%);
+    background-size: 44px 44px, 44px 44px, cover;
+    animation: drift 30s linear infinite;
+    padding: 40px 16px;
+  }
+  @keyframes drift { to { background-position: 44px 44px, 44px 44px, 0 0; } }
 
-        body {
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            color: #333;
-        }
+  .wrap { width:100%; max-width:460px; }
+  .chip {
+    display:inline-block; font-size:10px; letter-spacing:3px; color:#7ef0c0;
+    border:1px solid rgba(126,240,192,.35); border-radius:20px; padding:5px 14px; margin-bottom:14px;
+  }
+  h1 { font-size:30px; font-weight:700; letter-spacing:.5px; }
+  .sub { color:#93a0c0; font-size:13px; margin:8px 0 26px; }
 
-        .container {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
+  .glass {
+    background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12);
+    border-radius:16px; padding:28px; backdrop-filter: blur(14px);
+    box-shadow: 0 18px 50px rgba(0,0,0,.45);
+  }
 
-        h1 {
-            text-align: center;
-            font-size: 24px;
-            margin-bottom: 24px;
-            color: #1a1a1a;
-            font-weight: 600;
-        }
+  label { display:block; font-size:12px; letter-spacing:1px; color:#9fb0d8; margin-bottom:7px; }
+  input {
+    width:100%; padding:12px 14px; margin-bottom:18px; font-size:14px; color:#fff;
+    background:rgba(0,0,0,.28); border:1px solid rgba(255,255,255,.16); border-radius:10px;
+    transition: border-color .25s, box-shadow .25s;
+  }
+  input:focus { outline:none; border-color:#7ef0c0; box-shadow:0 0 0 3px rgba(126,240,192,.15); }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+  button {
+    width:100%; padding:14px; font-size:15px; font-weight:600; letter-spacing:.5px; cursor:pointer;
+    color:#06281a; background:linear-gradient(135deg,#7ef0c0,#4CAF50); border:none; border-radius:10px;
+    transition: transform .12s, filter .2s;
+  }
+  button:hover:not(:disabled) { filter:brightness(1.08); transform:translateY(-1px); }
+  button:active:not(:disabled) { transform:translateY(1px); }
+  button:disabled { opacity:.55; cursor:wait; }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #555;
-        }
+  /* --- the pipeline visual --- */
+  .pipeline { display:flex; justify-content:space-between; margin-top:24px; }
+  .stage { flex:1; text-align:center; position:relative; font-size:10px; letter-spacing:1px; color:#68749a; }
+  .stage::before {
+    content:''; display:block; width:14px; height:14px; margin:0 auto 8px; border-radius:50%;
+    border:2px solid #3a4668; background:#0b1020; transition:all .3s;
+  }
+  .stage:not(:last-child)::after {
+    content:''; position:absolute; top:7px; left:calc(50% + 12px); width:calc(100% - 24px);
+    height:2px; background:#3a4668;
+  }
+  .stage.active { color:#ffd76e; }
+  .stage.active::before { border-color:#ffd76e; box-shadow:0 0 12px rgba(255,215,110,.6); animation:pulse .8s infinite; }
+  .stage.done { color:#7ef0c0; }
+  .stage.done::before { border-color:#7ef0c0; background:#7ef0c0; box-shadow:0 0 10px rgba(126,240,192,.5); }
+  .stage.done:not(:last-child)::after { background:#7ef0c0; }
+  .stage.fail { color:#ff6b6b; }
+  .stage.fail::before { border-color:#ff6b6b; background:#ff6b6b; }
+  @keyframes pulse { 50% { transform:scale(1.25); } }
 
-        input[type="text"],
-        input[type="email"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
+  #result { margin-top:16px; font-size:13px; text-align:center; min-height:18px; }
 
-        input[type="text"]:focus,
-        input[type="email"]:focus {
-            border-color: #4CAF50;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
-        }
+  /* --- the badge --- */
+  .badge { animation: flipIn .65s cubic-bezier(.2,.8,.3,1.1); overflow:hidden; padding:0; }
+  @keyframes flipIn { from { transform:perspective(900px) rotateY(80deg); opacity:0; } to { transform:none; opacity:1; } }
+  .badge-head {
+    display:flex; justify-content:space-between; padding:14px 22px; font-size:11px; letter-spacing:2px;
+    background:linear-gradient(135deg,#1d3a2f,#12291f); color:#7ef0c0; border-bottom:1px solid rgba(126,240,192,.25);
+  }
+  .badge-body { display:flex; gap:18px; padding:24px 22px; align-items:center; }
+  .avatar {
+    width:64px; height:64px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center;
+    font-size:22px; font-weight:700; color:#06281a; background:linear-gradient(135deg,#7ef0c0,#4CAF50);
+  }
+  .rows div { margin-bottom:8px; font-size:13px; }
+  .rows span { color:#8b98bd; display:block; font-size:10px; letter-spacing:1.5px; }
+  .rows b { font-weight:600; }
+  .badge-foot { padding:0 22px 6px; font-size:12px; color:#7ef0c0; text-align:center; }
+  .badge button { margin:14px 22px 22px; width:calc(100% - 44px); }
 
-        button[type="submit"] {
-            width: 100%;
-            padding: 14px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s ease, transform 0.1s ease;
-            margin-top: 10px;
-        }
+  .confetti { position:fixed; top:-12px; width:8px; height:14px; z-index:99; animation:fall linear forwards; }
+  @keyframes fall { to { transform:translateY(105vh) rotate(720deg); } }
 
-        button[type="submit"]:hover {
-            background-color: #45a049;
-        }
-
-        button[type="submit"]:active {
-            transform: translateY(2px);
-        }
-
-        #result {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 14px;
-            color: #4CAF50;
-            font-weight: 500;
-        }
-    </style>
+  footer { margin-top:22px; text-align:center; font-size:10px; letter-spacing:1px; color:#5b6788; }
+  [hidden] { display:none !important; }
+</style>
 </head>
 <body>
+<div class="wrap">
+  <span class="chip">SENTINEL PLATFORM // HR MODULE</span>
+  <h1>Crew Onboarding</h1>
+  <p class="sub">Register a new crew member — and watch the record ship through the pipeline.</p>
 
-    <div class="container">
-        <h1>Employee Registration</h1>
-
-        <form id="employeeForm">
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" placeholder="John Doe" required>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" placeholder="john@example.com" required>
-            </div>
-
-            <div class="form-group">
-                <label for="designation">Designation</label>
-                <input type="text" id="designation" placeholder="Software Engineer" required>
-            </div>
-
-            <button type="submit">Submit Registration</button>
-        </form>
-
-        <h2 id="result"></h2>
+  <section id="formCard" class="glass">
+    <form id="employeeForm">
+      <label for="name">NAME</label>
+      <input type="text" id="name" placeholder="John Doe" required>
+      <label for="email">EMAIL</label>
+      <input type="email" id="email" placeholder="john@example.com" required>
+      <label for="designation">DESIGNATION</label>
+      <input type="text" id="designation" placeholder="Software Engineer" required>
+      <button type="submit" id="submitBtn">Initiate Onboarding</button>
+    </form>
+    <div class="pipeline" id="pipeline" hidden>
+      <div class="stage">VALIDATE</div>
+      <div class="stage">BUILD</div>
+      <div class="stage">DEPLOY</div>
+      <div class="stage">VERIFY</div>
     </div>
+    <h2 id="result" aria-live="polite"></h2>
+  </section>
 
-    <script>
-        document.getElementById("employeeForm")
-            .addEventListener("submit", async function(event) {
-                event.preventDefault();
-                
-                const submitBtn = event.target.querySelector('button[type="submit"]');
-                submitBtn.innerText = "Submitting...";
-                submitBtn.disabled = true;
+  <section id="badgeCard" class="glass badge" hidden>
+    <div class="badge-head"><span>SENTINEL CREW BADGE</span><span id="empId"></span></div>
+    <div class="badge-body">
+      <div class="avatar" id="avatar">--</div>
+      <div class="rows">
+        <div><span>NAME</span><b id="bName"></b></div>
+        <div><span>EMAIL</span><b id="bEmail"></b></div>
+        <div><span>DESIGNATION</span><b id="bDesignation"></b></div>
+        <div><span>ISSUED</span><b id="bDate"></b></div>
+      </div>
+    </div>
+    <div class="badge-foot" id="serverMsg"></div>
+    <button type="button" id="againBtn">Onboard another crew member</button>
+  </section>
 
-                const data = {
-                    name: document.getElementById("name").value,
-                    email: document.getElementById("email").value,
-                    designation: document.getElementById("designation").value
-                };
+  <footer>curated by Mohammed Hyder Ali · this frontend ships through the same Jenkins pipeline it celebrates</footer>
+</div>
 
-                try {
-                    const response = await fetch('/api', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(data)
-                    });
+<script>
+  const $ = id => document.getElementById(id);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-                    const result = await response.text();
-                    document.getElementById("result").innerHTML = result;
-                    document.getElementById("employeeForm").reset();
-                } catch (error) {
-                    document.getElementById("result").innerHTML = "Error saving employee.";
-                    document.getElementById("result").style.color = "#f44336";
-                } finally {
-                    submitBtn.innerText = "Submit Registration";
-                    submitBtn.disabled = false;
-                }
-            });
-    </script>
+  $('employeeForm').addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const btn = $('submitBtn');
+    btn.disabled = true; btn.innerText = 'Transmitting…';
+    $('result').innerText = '';
 
+    const stages = document.querySelectorAll('.stage');
+    stages.forEach(s => s.className = 'stage');
+    $('pipeline').hidden = false;
+
+    // real request starts immediately; the pipeline visual runs alongside it
+    const request = fetch('/api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: $('name').value,
+        email: $('email').value,
+        designation: $('designation').value
+      })
+    }).then(r => r.text().then(t => ({ ok: r.ok, text: t })));
+
+    try {
+      for (let i = 0; i < 3; i++) {           // VALIDATE → BUILD → DEPLOY
+        stages[i].classList.add('active');
+        await sleep(430);
+        stages[i].classList.remove('active');
+        stages[i].classList.add('done');
+      }
+      stages[3].classList.add('active');       // VERIFY waits on the real response
+      const res = await request;
+      await sleep(350);
+      stages[3].classList.remove('active');
+
+      if (res.ok) {
+        stages[3].classList.add('done');
+        $('result').style.color = '#7ef0c0';
+        showBadge(res.text);
+      } else {
+        stages[3].classList.add('fail');
+        $('result').style.color = '#ff6b6b';
+        $('result').innerText = 'Pipeline failed at VERIFY: ' + res.text;
+        btn.disabled = false; btn.innerText = 'Retry Onboarding';
+      }
+    } catch (err) {
+      stages[3].classList.remove('active');
+      stages[3].classList.add('fail');
+      $('result').style.color = '#ff6b6b';
+      $('result').innerText = 'Connection lost — the backend did not answer.';
+      btn.disabled = false; btn.innerText = 'Retry Onboarding';
+    }
+  });
+
+  function showBadge(serverText) {
+    const name = $('name').value.trim();
+    $('avatar').innerText = name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() || '--';
+    $('bName').innerText = name;
+    $('bEmail').innerText = $('email').value.trim();
+    $('bDesignation').innerText = $('designation').value.trim();
+    $('empId').innerText = 'EMP-' + Date.now().toString(36).toUpperCase();
+    $('bDate').innerText = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+    $('serverMsg').innerText = serverText;
+    $('formCard').hidden = true;
+    $('badgeCard').hidden = false;
+    confetti();
+  }
+
+  function confetti() {
+    const colors = ['#7ef0c0', '#4CAF50', '#ffd76e', '#6ec1ff', '#ff8fab'];
+    for (let i = 0; i < 60; i++) {
+      const c = document.createElement('span');
+      c.className = 'confetti';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.background = colors[i % colors.length];
+      c.style.animationDuration = (2 + Math.random() * 2) + 's';
+      c.style.animationDelay = (Math.random() * .8) + 's';
+      c.addEventListener('animationend', () => c.remove());
+      document.body.appendChild(c);
+    }
+  }
+
+  $('againBtn').addEventListener('click', () => {
+    $('employeeForm').reset();
+    $('badgeCard').hidden = true;
+    $('formCard').hidden = false;
+    $('pipeline').hidden = true;
+    $('result').innerText = '';
+    const btn = $('submitBtn');
+    btn.disabled = false; btn.innerText = 'Initiate Onboarding';
+  });
+</script>
 </body>
 </html>
