@@ -16,9 +16,8 @@ that pages Slack the moment anything degrades.
 
 ## 🎬 Demo: Crew Onboarding app (screen recording)
 
-<video src="Assets/crew-onboarding-app-ui.mp4" controls width="720"></video>
+<video src="Assets/app-ui.mp4" controls width="720"></video>
 
-*If the player doesn't render, [watch it here](Assets/crew-onboarding-app-ui.mp4).*
 ---
 
 ## 🏗 Architecture
